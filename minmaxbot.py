@@ -57,7 +57,7 @@ class MinmaxBot(Bot):
         if current_phase_type == "A": # Adjustments
                 power = game.get_power(power_name)
                 build_count = len(power.centers) - len(power.units)
-                ordered_locations = random.sample(my_orderable_locations, abs(build_count))
+                ordered_locations = random.sample(my_orderable_locations, min(len(my_orderable_locations), abs(build_count)))
                 ret_orders = [random.choice([order for order in possible_orders[loc] if order != "WAIVE"]) for loc in ordered_locations]
         elif current_phase_type == "R": # Retreat
                 ret_orders = [random.choice(possible_orders[loc]) for loc in game.get_orderable_locations(power_name)]
@@ -72,9 +72,15 @@ class MinmaxBot(Bot):
             ret_orders = []
             if game_facade.isMovementPhase():
                 units = game_facade.getMovesByUnit(power_name)
-                for unit in units:
-                    dest = random.choice(list(unit.hold_moves.keys()))
-                    ret_orders.append(unit.get_hold_moves_order(dest))
+                unit_dst_pairs = GameFacade.get_consistent_src_dst_pairs(units)
+                print("%d POSSIBILITIES FOUND"%len(unit_dst_pairs))
+                for unit, dst in random.choice(unit_dst_pairs):
+                    ret_orders.append(unit.get_hold_moves_order(dst))                 
+
+                # dests_set = GameFacade.get_exclusive_hold_moves_dests(units)
+                # for unit in units:
+                #     dest = random.choice(list(unit.hold_moves.keys()))
+                #     ret_orders.append(unit.get_hold_moves_order(dest))
             else:
                 raise Exception
         return ret_orders
